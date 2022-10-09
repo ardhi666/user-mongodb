@@ -76,7 +76,7 @@ module.exports = class UserController {
 
     static async getsUser(req, res) {
         try {
-            const result = await User.find().select(-'password')
+            let result = await User.find().select(-'password')
 
             if(result.length == 0){
                 return res.status(404).send({
@@ -89,6 +89,14 @@ module.exports = class UserController {
                     }
                 })
             }
+
+            result = JSON.parse(JSON.stringify(result))
+            result = result.map((item) => {
+                return {
+                    ...item,
+                    test: 'test'
+                }
+            })
     
             res.status(200).send({
                 meta:{
