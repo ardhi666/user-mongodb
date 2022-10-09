@@ -76,7 +76,7 @@ module.exports = class UserController {
 
     static async getsUser(req, res) {
         try {
-            let result = await User.find().select(-'password')
+            let result = await User.find()
 
             if(result.length == 0){
                 return res.status(404).send({
@@ -94,7 +94,8 @@ module.exports = class UserController {
             result = result.map((item) => {
                 return {
                     ...item,
-                    test: 'test'
+                    test:'test',
+                    password:null
                 }
             })
     
@@ -166,6 +167,45 @@ module.exports = class UserController {
             res.status(500).send({
                 status:"failed",
                 error
+            })
+        }
+    }
+
+    static async login(req, res) {
+        try {
+            const schema = Joi.object({
+                email: Joi.string().email().min(4).required(),
+                password: Joi.string().min(4).required(),
+            });
+        
+            // do validation and get error object from schema.validate
+            const { error } = schema.validate(req.body);
+        
+            // if error exist send validation error message
+            if (error)
+                return res.status(400).send({
+                    error: {
+                        message: error.details[0].message,
+                    },
+                });
+
+            const userExist = await User.findOne({email:req.body.email})
+
+            const isValid = await bcrypt.compare(req.body.password, userExist.password);
+
+            if(!isValid){
+                return res.status(400).send({
+                    status: "failed",
+                    message: "Wrong Password",
+                });
+            }
+            res.status(200).send({
+                message:"LOGIN SUCCESS"
+            })
+        } catch (error) {
+            console.log(error);
+            res.status(400).send({
+                message:'error'
             })
         }
     }
